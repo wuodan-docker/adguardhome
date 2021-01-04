@@ -5,7 +5,6 @@ ADD https://github.com/AdguardTeam/AdGuardHome/releases/latest/download/AdGuardH
 RUN tar -xf AdGuardHome_linux_armv6.tar.gz
 
 FROM alpine:latest
-LABEL maintainer="AdGuard Team <devteam@adguard.com>"
 
 # Update CA certs
 RUN apk --no-cache --update add ca-certificates && \
