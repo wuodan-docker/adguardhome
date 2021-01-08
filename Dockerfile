@@ -13,11 +13,14 @@ FROM alpine:latest
 
 WORKDIR /opt/adguardhome
 
+ADD cmd.sh /app/
+
 COPY --from=build /src/AdGuardHome/AdGuardHome /opt/adguardhome/
 COPY --from=build /src/AdGuardHome/LICENSE.txt /opt/adguardhome/
 
 # Update CA certs
 RUN apk --no-cache --update add ca-certificates sudo && \
+	chmod +x cmd.sh && \
 	chown -R nobody:nogroup . && \
 	rm -rf /var/cache/apk/* /tmp/* /var/tmp/
 
@@ -30,11 +33,4 @@ EXPOSE	53/tcp 53/udp \
 VOLUME /opt/adguardhome/conf
 VOLUME /opt/adguardhome/work
 
-# make sure the docker volume mountpoints are writable
-CMD chmod ugo+w conf && \
-	chmod ugo+w work && \
-	sudo -u nobody \
-		./AdGuardHome \
-			-h 0.0.0.0 \
-			-c /opt/adguardhome/conf/AdGuardHome.yaml \
-			-w /opt/adguardhome/work
+CMD ./cmd.sh
