@@ -1,20 +1,40 @@
 FROM alpine:latest AS build
 
-WORKDIR /src
-ADD https://github.com/AdguardTeam/AdGuardHome/releases/latest/download/AdGuardHome_linux_armv6.tar.gz /src/AdGuardHome_linux_armv6.tar.gz
-RUN tar -xf AdGuardHome_linux_armv6.tar.gz
+ARG APP_VERSION=0.104.3
+
+ADD https://github.com/AdguardTeam/AdGuardHome/releases/download/v$APP_VERSION/AdGuardHome_linux_armv6.tar.gz \
+	/src/AdGuardHome_linux_armv6.tar.gz
+
+RUN cd /src && \
+	tar -xf AdGuardHome_linux_armv6.tar.gz
+
 
 FROM alpine:latest
 
+WORKDIR /opt/adguardhome
+
+COPY --from=build /src/AdGuardHome/AdGuardHome /opt/adguardhome/
+COPY --from=build /src/AdGuardHome/LICENSE.txt /opt/adguardhome/
+
 # Update CA certs
-RUN apk --no-cache --update add ca-certificates && \
-    rm -rf /var/cache/apk/* && mkdir -p /opt/adguardhome
+RUN apk --no-cache --update add ca-certificates sudo && \
+	chown -R nobody:nogroup . && \
+	rm -rf /var/cache/apk/* /tmp/* /var/tmp/
 
-COPY --from=build /src/AdGuardHome/AdGuardHome /opt/adguardhome/AdGuardHome
+EXPOSE	53/tcp 53/udp \
+		67/tcp 67/udp 68/tcp 68/udp \
+		80/tcp 443/tcp \
+		853/tcp 853/udp \
+		3000/tcp
 
-EXPOSE 53/tcp 53/udp 67/tcp 67/udp 68/tcp 68/udp 80/tcp 443/tcp 853/tcp 853/udp 3000/tcp
+VOLUME /opt/adguardhome/conf
+VOLUME /opt/adguardhome/work
 
-VOLUME ["/opt/adguardhome/conf", "/opt/adguardhome/work"]
-
-ENTRYPOINT ["/opt/adguardhome/AdGuardHome"]
-CMD ["-h", "0.0.0.0", "-c", "/opt/adguardhome/conf/AdGuardHome.yaml", "-w", "/opt/adguardhome/work"]
+# make sure the docker volume mountpoints are writable
+CMD chmod ugo+w conf && \
+	chmod ugo+w work && \
+	sudo -u nobody \
+		./AdGuardHome \
+			-h 0.0.0.0 \
+			-c /opt/adguardhome/conf/AdGuardHome.yaml \
+			-w /opt/adguardhome/work
