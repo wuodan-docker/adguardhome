@@ -13,7 +13,7 @@ FROM alpine:latest
 
 WORKDIR /opt/adguardhome
 
-ADD cmd.sh /app/
+ADD cmd.sh /opt/adguardhome/
 
 COPY --from=build /src/AdGuardHome/AdGuardHome /opt/adguardhome/
 COPY --from=build /src/AdGuardHome/LICENSE.txt /opt/adguardhome/
