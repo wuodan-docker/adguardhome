@@ -20,7 +20,7 @@ COPY --from=build /src/AdGuardHome/LICENSE.txt /opt/adguardhome/
 
 # Update CA certs
 RUN apk --no-cache --update add ca-certificates sudo && \
-	chmod +x cmd.sh && \
+	chmod ugo+x cmd.sh && \
 	chown -R nobody:nogroup . && \
 	rm -rf /var/cache/apk/* /tmp/* /var/tmp/
 
